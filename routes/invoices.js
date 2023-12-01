@@ -6,7 +6,7 @@ const db = require("../db");
 router.get("/", async (req, res, next) => {
   try {
     const results = await db.query(`SELECT * FROM invoices`);
-    return res.json({ invoice: results.rows });
+    return res.json({ invoices: results.rows });
   } catch (e) {
     next(e);
   }
@@ -70,10 +70,15 @@ router.put('/:id', async (req, res, next) => {
     try {
         const id = req.params.id;
         const amt = req.body.amt;
+        const date = new Date();
+        const paid_date = date.getDay() + "/" + date.getMonth() 
+        + "/" + date.getFullYear() + " @ " 
+        + date.getHours() + ":" 
+        + date.getMinutes() + ":" + date.getSeconds(); 
         const result = await db.query(`
-        UPDATE invoices SET amt=$1
+        UPDATE invoices SET amt=$1, paid_date=$3, paid=true
         WHERE id=$2
-        RETURNING id,comp_code,amt,paid,add_date,paid_date`, [amt,id])
+        RETURNING id,comp_code,amt,paid,add_date,paid_date`, [amt,id,paid_date])
         if (result.rows.length === 0) {
             throw new ExpressError(`No such invoice: ${id}`,404);
           }
